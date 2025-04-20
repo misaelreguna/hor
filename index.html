@@ -3,186 +3,844 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutorial Project dengan Copy Code</title>
+    <title>Tutorial Project dengan Laravel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f9f9f9;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-        }
-        .tutorial-step {
-            background: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        pre {
-            position: relative;
-            background: #2d2d2d;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-        }
-        .copy-button {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            padding: 5px 10px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-        .copy-button:hover {
-            opacity: 1;
-        }
-        .step-number {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            background: #4CAF50;
-            color: white;
-            text-align: center;
-            line-height: 30px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .note {
-            background: #e8f5e9;
-            padding: 10px;
-            border-left: 4px solid #4CAF50;
-            margin: 10px 0;
-        }
-        img {
-            max-width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h1>Tutorial Membuat Project dengan Laravel</h1>
     
     <div class="tutorial-step">
-        <h2><span class="step-number">1</span>Setup Database Migration</h2>
-        <p>Buat migration untuk tabel users dengan Illuminate Database:</p>
-        <pre><code class="language-php">use Illuminate\Database\Migrations\Migration;
+        <h2><span class="step-number">1</span>Setup Database Migration untuk users</h2>
+        <p>Membuat migration users: php artisan make:migration users</p>
+        <div class="code-container">
+            <pre><code class="language-php">use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+        * Run the migrations.
+        */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->enum('role',allowed:['admin','user','bank'])->default(value:'user');
             $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->decimal('balance')->default(0);
+            $table->decimal('balance')->default(value:0);
             $table->rememberToken();
             $table->timestamps();
         });
     }
 
+    /**
+        * Reverse the migrations.
+        */
     public function down(): void
     {
         Schema::dropIfExists('users');
     }
 };
+                
 </code></pre>
-        <button class="copy-button">Copy</button>
+            <button class="copy-button">Copy</button>
+        </div>
     </div>
 
     <div class="tutorial-step">
-        <h2><span class="step-number">2</span>Model User</h2>
-        <p>Buat model User dengan fillable attributes:</p>
-        <pre><code class="language-php">namespace App\Models;
+        <h2><span class="step-number">2</span>Setup Database Migration untuk transaksi</h2>
+        <p>php artisan make:migration transaksi</p>
+        <div class="code-container">
+            <pre><code class="language-php">use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
+use function PHPSTORM_META\type;
+
+return new class extends Migration
+{
+    /**
+        * Run the migrations.
+        */
+    public function up(): void
+    {
+        Schema::create('transaksi', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('sender_id')->constrained('users')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('receiver_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->enum('tipe_transaksi',['topup','tarik','transfer']);
+            $table->bigInteger('amount');
+            $table->boolean('confirmed')->default(false);
+            $table->timestamps();
+        });
+    }
+
+    /**
+        * Reverse the migrations.
+        */
+    public function down(): void
+    {
+        Schema::dropIfExists('topup_transaksi');
+    }
+};
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">3</span>Setup Database Migration untuk saldo</h2>
+        <p>php artisan make:migration saldo</p>
+        <div class="code-container">
+            <pre><code class="language-php">use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+use function PHPSTORM_META\type;
+
+return new class extends Migration
+{
+    /**
+        * Run the migrations.
+        */
+    public function up(): void
+    {
+        Schema::create('saldo', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->references('id')->on('users')->onDelete('cascade');
+            $table->integer('uang');
+            $table->string('deskripsi');
+            $table->timestamps();
+        });
+    }
+
+    /**
+        * Reverse the migrations.
+        */
+    public function down(): void
+    {
+        Schema::dropIfExists('saldo');
+    }
+};
+
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">4</span>Setup Model untuk User</h2>
+        <p>php artisan make:model User</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Models;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
+    use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+        * The attributes that are mass assignable.
+        *
+        * @var array<int, string>
+        */
+    protected $table='users';
     protected $fillable = [
         'name',
         'email',
+        'role',
         'password',
         'balance',
     ];
 
+    /**
+        * The attributes that should be hidden for serialization.
+        *
+        * @var array<int, string>
+        */
     protected $hidden = [
         'password',
         'remember_token',
     ];
+
+    /**
+        * The attributes that should be cast.
+        *
+        * @var array<string, string>
+        */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
 }
+    
+                
 </code></pre>
-        <button class="copy-button">Copy</button>
+            <button class="copy-button">Copy</button>
+        </div>
     </div>
 
     <div class="tutorial-step">
-        <h2><span class="step-number">3</span>Controller Transaksi</h2>
-        <p>Implementasi method topup di TransaksiController:</p>
-        <pre><code class="language-php">public function topup(Request $request)
+        <h2><span class="step-number">5</span>Setup Model untuk Transaksi</h2>
+        <p>php artisan make:model Transaksi</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Models;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Transaksi extends Model
 {
-    $request->validate([
-        'user_id' => 'required|exists:users,id',
-        'amount' => 'required|numeric|min:1'
-    ]);
+    protected $table = 'transaksi';
+    protected $fillable = [
+        'sender_id',
+        'receiver_id',
+        'tipe_transaksi',
+        'amount',
+        'confirmed',
+    ];
+    public function senders():BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sender_id');
+    }
 
-    $targetUser = User::findOrFail($request->user_id);
+    // Relasi ke user sebagai receiver
+    public function receiver():BelongsTo
+    {
+        return $this->belongsTo(User::class, 'receiver_id');
+    }
+}
+                
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
 
-    $transaksi = Transaksi::create([
-        'sender_id' => null,
-        'receiver_id' => $targetUser->id,
-        'tipe_transaksi' => 'topup',
-        'confirmed' => true,
-        'amount' => $request->amount
-    ]);
+    <div class="tutorial-step">
+        <h2><span class="step-number">6</span>Setup UserSeeder</h2>
+        <p>php artisan make:seed UserSeeder</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace Database\Seeders;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-    $targetUser->update([
-        'balance' => $targetUser->balance + $request->amount
-    ]);
+class UserSeeder extends Seeder
+{
+    /**
+        * Run the database seeds.
+        */
+    public function run(): void
+    {
+        $user = [
+            [
+                'name' => 'misaelreguna',
+                'email'=> 'misaelreguna@gmail.com',
+                'role' => 'user',
+                'password' =>bcrypt(123),
+                'balance' => 0,
+            ],
+            [
+                'name' => 'klei',
+                'email'=> 'klei@gmail.com',
+                'role' => 'admin',
+                'password' =>bcrypt(123),
+                'balance' => 0,
+            ],
+            [
+                'name' => 'misael',
+                'email'=> 'misael@gmail.com',
+                'role' => 'bank',
+                'password' =>bcrypt(123),
+                'balance' => 0,
+            ]
+        ];
+        foreach($user as $item){
+            User::create($item);
+        }
+    }
+}         
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">7</span>Setup Controller Admin</h2>
+        <p>php artisan make:controller AdminController</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Http\Controllers;
+use App\Models\User;
+use App\Models\Transaksi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class AdminController extends Controller
+{
+    /**
+        * Display a listing of the resource.
+        */
+    public function index()
+    {
+        $user = User::all();
+        $transaksi = Transaksi::all();
+        return view('admin.index', compact('user', 'transaksi'));
+    }
+
+    /**
+        * Show the form for creating a new resource.
+        */
+    public function create() {}
+
+    /**
+        * Store a newly created resource in storage.
+        */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|unique:users', //Tidak boleh ada user lain yang sudah memakai email itu.Kalau ada, maka akan gagal validasi.
+            'role' => 'required',
+            'password' => 'required',
+            'name' => 'required'
+        ]);
+        
+        User::create([
+            'email' => $request->email,
+            'name' => $request->name,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+        ]);
+        return redirect()->route('admin.index');
+    }
+
+    /**
+        * Display the specified resource.
+        */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+        * Show the form for editing the specified resource.
+        */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+        * Update the specified resource in storage.
+        */
+    public function update(Request $request, User $user, $id)
+    {
+        $user = User::find($id);
+        $request->validate([
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'role' => 'required|string',
+            'password' => 'nullable|max:8',
+            'name' => 'required|string'
+        ]);
+
+        $user->update([
+            'email' => $request->email,
+            'password' => $request->password ? Hash::make($request->password) : $user->password,
+            'role' => $request->role,
+            'name' => $request->name,
+        ]);
+        $user->save();
+        return redirect()->route('admin.index')->with(['success' => 'Data Berhasil Di Ubah!']);
+    }
+
+    public function confirmTopup($id)
+    {
+        $transaksi = Transaksi::findOrFail($id); // Cari transaksi berdasarkan ID
+
+        // Pastikan transaksi adalah topup dan belum dikonfirmasi
+        if ($transaksi->tipe_transaksi === 'topup' && !$transaksi->confirmed) {
+            // Tambahkan saldo ke user
+            $user = User::find($transaksi->sender_id);
+            $user->update(['balance' => $user->balance + $transaksi->amount]);
+
+            // Tandai transaksi sebagai dikonfirmasi
+            $transaksi->update(['confirmed' => true]);
+
+            return redirect()->route('admin.index')->with('success', 'Topup telah dikonfirmasi.');
+        }
+        
+        return redirect()->route('admin.index')->with('error', 'Transaksi tidak valid atau sudah dikonfirmasi.');
+    }
+
+    /**
+        * Remove the specified resource from storage.
+        */
+    public function destroy(string $id)
+    {
+        $users = User::findOrfail($id);
+        $users->delete();
+
+        return redirect()->route('admin.index');
+    }
+}                
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">8</span>Setup BankController</h2>
+        <p>php artisan make:model BankController</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Http\Controllers;
+use App\Models\User;
+use App\Models\Transaksi;
+use Illuminate\Http\Request;
+use function Laravel\Prompts\alert;
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
+class BankController extends Controller
+{
+    /**
+        * Display a listing of the resource.
+        */
+    public function index()
+    {
+        $users = User::where('id', '!=', Auth::id())->where('role', 'user')->get();
+        $transactions = Transaksi::latest()->get();
+        return view ('bank.index', compact('users', 'transactions') );
+            
+    }
+
+    /**
+        * Show the form for creating a new resource.
+        */
+    public function create()
+    {
+        //
+    }
+
+    /**
+        * Store a newly created resource in storage.
+        */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'email'=> 'required|unique:users', //Tidak boleh ada user lain yang sudah memakai email itu.Kalau ada, maka akan gagal validasi.
+            'password' => 'required ',
+            'name'=> 'required'
+        ]);
+
+        User::create ([
+            'email'=> $request->email,
+            'role'=> 'user',
+            'password'=> $request->password,
+            'name'=> $request->name
+        ]);
+        return redirect()->route ('bank.index');
+    }
+
+    /**
+        * Display the specified resource.
+        */
+    public function show(string $id)
+    {
+        //
+    }
+
+    public function tariktunai (Request $request){
+        $targetUser = User::find($request->user_id); // disini user_id dimaksudkan name dalam tampilan view bank
+        if($request-> amount < 1){
+            return redirect()->route('bank.index')->alert('topup minimal Rp 1');
+        }
+
+        if($targetUser->balance < $request->amount){
+            return redirect()->route('bank.index')->alert('saldo tidak cukup');
+        }
+        Transaksi::create([
+            'sender_id'=>$targetUser->id,
+            'tipe_transaksi'=>'tarik',
+            'confirmed'=> true,
+            'amount'=>$request->amount
+        ]);
+        // kurangkan saldo user
+        $targetUser->update(['balance'=> $targetUser->balance - $request->amount]);
+        return redirect()->route('bank.index')->with('success','withdrawl berhasil');
+    }
+
+    public function topup(Request $request, $id){
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:1'
+        ]);
     
-    return redirect()->back()->with('success', 'Top up success');
+        // Cek minimal topup
+        if($request->amount < 1){
+            return redirect()->route('bank.index')->with('error', 'Topup minimal Rp 1');
+        }
+    
+        // Dapatkan user yang akan ditopup
+        $targetUser = User::findOrFail($request->user_id);
+    
+        // Buat transaksi baru
+        $transaksi = Transaksi::create([
+            'sender_id' => $targetUser->id,
+            'tipe_transaksi' => 'topup',
+            'confirmed' => true,
+            'amount' => $request->amount
+        ]);
+    
+        // Update saldo user yang ditopup
+        $targetUser->update([
+            'balance' => $targetUser->balance + $request->amount
+        ]);
+        
+        return redirect()->route('bank.index')->with('success', 'Top up success');
+    }
+    
+    public function confirmTopup($id){
+        $transaksi = Transaksi::findOrFail($id); // Cari transaksi berdasarkan ID
+
+        //pastikan transaksi adalah topup dan belum dikonfirmasi
+        if ($transaksi->tipe_transaksi === 'topup' && !$transaksi->confirmed){
+
+            //tambahkan saldo ke user
+            $user = User::find($transaksi->sender_id);
+            $user-> update(['balance'=> $user->balance + $transaksi->amount]);
+
+            //update transaksi menjadi dikondfirmasi
+            $transaksi ->update(['confirmed'=> true]);
+
+            return redirect()->route('bank.index')->with('succes','TopUp telah dikonfirmasi');
+        }
+        return redirect()->route('bank.index')->with('error', 'Transaksi tidak valid atau sudah dikonfirmasi.');
+    }
+
+    public function edit(string $id)
+    {
+        $bank = User::find($id);
+        return view ('bank.edit',compact('bank'));
+    }
+
+    /**
+        * Update the specified resource in storage.
+        */
+    public function update(Request $request, User $user,$id)
+    {
+        $user = User::find($id);
+        $request->validate([
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|max:8',
+            'name'=> 'required|string'
+        ]);
+        $user->update([
+            'email' => $request->email,
+            'password' => $request->password ? Hash::make($request->password) : $user->password,
+            'name' => $request->name,
+        ]);
+        $user->save();
+        return redirect()->route('admin.index')->with(['success' => 'Data Berhasil Di Ubah!']);
+    }
+
+    /**
+        * Remove the specified resource from storage.
+        */
+    public function destroy(string $id)
+    {
+        $users = User::findOrfail($id); //mengambil id user yang ingin di delete
+        $users->delete(); //melakukan delete
+
+        return redirect()->route('bank.index'); // mengembalikan ke sebuah route bank.index == kembali ke tampilan bank.index
+    }
+}
+                
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">9</span>Setup LoginController</h2>
+        <p>php artisan make:controller LoginController</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Http\Controllers;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+
+class LoginController extends Controller
+{
+    public function login()
+    {
+        return view('auth/login');
+    }
+
+    public function loginAction (Request $request) {
+        Validator::make($request->all(),[
+            'email'=>'required|email',
+            'password'=>'required|max:8',
+        ])->validate();
+
+        $login = [
+            'email' => $request->email,
+            'password' => $request->password,
+        ];
+
+        $request->session()->regenerate();
+        
+        if(Auth::attempt($login)) {
+            if(Auth::User()->role == 'admin') {
+                return redirect()->route('admin.index');
+            } elseif(Auth::User()->role == 'user') {
+                return redirect()->route('user.index');
+            } elseif(Auth::User()->role == 'bank') {
+                return redirect()->route('bank.index');
+            }
+        }else {
+            return redirect()->route('login');
+        }
+
+    }
+    public function logout(Request $request){
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        return redirect('login');
+    }
+}
+                
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">10</span>Setup MutasiController</h2>
+        <p>php artisan make:controller MutasiController</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Http\Controllers;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Transaksi; // Pastikan model ini sudah sesuai dengan struktur tabel transaksi
+
+class MutasiController extends Controller
+{
+    /**
+        * Mutasi: Cetak PDF semua transaksi milik user yang sedang login.
+        */
+    public function userAll()
+    {
+        // Ambil transaksi dimana user login sebagai pengirim atau penerima.
+        $transactions = Transaksi::where(function($query) {
+            $query->where('sender_id', Auth::id())
+                    ->orWhere('receiver_id', Auth::id());
+        })->latest()->get();
+
+        // Load view PDF dan kirim data transaksi.
+        $pdf = PDF::loadView('mutasi.pdf', compact('transactions'));
+
+        // Download file PDF dengan nama "mutasi_user.pdf"
+        return $pdf->download('mutasi_user.pdf');
+    }
+
+    /**
+        * Mutasi: Cetak PDF detail satu transaksi milik user.
+        *
+        * @param int $id  ID transaksi
+        */
+    public function userSingle($id)
+    {
+        // Ambil transaksi sesuai ID dan pastikan transaksi tersebut
+        // adalah milik user yang sedang login (sebagai sender atau receiver)
+        $transaction = Transaksi::where('id', $id)
+            ->where(function($query) {
+                $query->where('sender_id', Auth::id())
+                        ->orWhere('receiver_id', Auth::id());
+            })->firstOrFail();
+
+        $pdf = PDF::loadView('mutasi.pdf_single', compact('transaction'));
+        return $pdf->download('mutasi_single.pdf');
+    }
+
+    /**
+        * Mutasi: Cetak PDF semua transaksi untuk admin atau bank.
+        * Pastikan route ini dilindungi oleh middleware untuk role admin atau bank.
+        */
+    public function mutasiAll()
+    {
+        // Ambil semua transaksi (jika ingin penyaringan khusus, bisa dikembangkan)
+        $transactions = Transaksi::latest()->get();
+        $pdf = PDF::loadView('mutasi.pdf_all', compact('transactions'));
+        return $pdf->download('mutasi_all.pdf');
+    }
 }
 </code></pre>
-        <button class="copy-button">Copy</button>
+            <button class="copy-button">Copy</button>
+        </div>
     </div>
 
-    <div class="note">
-        <strong>Catatan:</strong> Pastikan semua dependencies sudah terinstall dan database sudah terkonfigurasi dengan benar.
+    <div class="tutorial-step">
+        <h2><span class="step-number">11</span>Setup UserController</h2>
+        <p>php artisan make:controller UserController</p> 
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Http\Controllers;
+use App\Models\User;
+use App\Models\Transaksi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class UserController extends Controller
+{
+    public function index()
+    {
+        $currentUser = Auth::user();
+        $users = User::where('id', '!=', Auth::id())->where('role', 'user')->get();
+        $transactions = Transaksi::where('sender_id', Auth::id())->orWhere('receiver_id', Auth::id())->latest()->get();
+        return view('user.index', compact('users', 'transactions', 'currentUser'));
+    }
+
+    public function topup(Request $request)
+    {
+        $user = User::findOrfail(Auth::id());
+
+        if($request->amount < 1){
+            return redirect()->route('user.index')->alert('Topup minimal Rp 1');
+        }
+
+        Transaksi::create([
+            'sender_id' => $user->id,
+            'tipe_transaksi' => 'topup',
+            'amount' => $request->amount,
+            'confirmed' => false,
+        ]);
+        return redirect()->route('user.index')->with('success', 'Topup Success');
+    }
+
+    public function tariktunai(Request $request)
+    {
+        $user = User::findOrfail(Auth::id());
+        if($request->amount < 1){
+            return redirect()->route('user.index')->alert('Tarik tunai minimal Rp 1');
+        }
+
+        if($user->balance < $request->amount){
+            return redirect()->route('user.index')->alert('Saldo tidak cukup');
+        }
+
+        Transaksi::create([
+            'sender_id' => $user->id,
+            'tipe_transaksi' => 'tarik',
+            'amount' => $request->amount,
+            'confirmed' => true,
+        ]);
+        // kurangkan saldo ke user
+        $user->update(['balance' => $user->balance - $request->amount]);
+
+        return redirect()->route('user.index')->with('success', 'Tarik Tunai Success');
+    }
+
+    public function transfer(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        
+        $sender = User::findOrFail(Auth::id());
+        $receiver = User::findorfail($request->receiver_id);
+
+        if($request->amount < 1){   
+            return redirect()->route('user.index')->alert('Saldo tidak cukup'); 
+        }
+        if($sender->balance < $request->amount){
+            return redirect()->route('user.index')->alert('Saldo tidak cukup');
+        }
+        $receiver->update ([
+            'balance' => $receiver->balance + $request->amount
+        ]);
+
+        $sender->update ([
+            'balance' => $sender->balance - $request->amount
+        ]);
+
+
+        Transaksi::create([
+            'sender_id' => $sender->id,
+            'receiver_id' => $receiver->id,
+            'tipe_transaksi' => 'transfer',
+            'amount' => $request->amount,
+            'confirmed' => true,
+        ]);
+
+        return redirect()->route('user.index')->with('success', 'Transfer berhasil.');
+    }
+}               
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
     </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">12</span>Setup Middleware CheckUserRole</h2>
+        <p>php artisan make:middleware CheckUserRole</p>
+        <div class="code-container">
+            <pre><code class="language-php">namespace App\Http\Middleware;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckUserRole
+{
+    /**
+        * Handle an incoming request.
+        *
+        * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+        */
+    public function handle(Request $request, Closure $next ,$roles): Response
+    {
+        $userRole = Auth::user()->role;
+
+        //Mengubah roles menjadi array
+        // Jika roles adalah string, pisahkan dengan '|'
+        $rolesArray = explode( '|', $roles );
+
+        if(in_array( $userRole, $rolesArray)){
+            return $next($request);
+        }
+
+        //jika tidak sesuai, redirect atau tampilan error
+        if($userRole == 'admin') {
+            return redirect()->route('admin.index')->with('error', 'Anda tidak memiliki akses');
+        } elseif ( $userRole == 'user' ) {
+            return redirect()->route('user.index')->with('error', 'Anda tidak memiliki akses');
+        } elseif ($userRole == 'bank') {
+            return redirect()->route('bank.index')->with('error', 'Anda tidak memiliki akses');
+        } else {
+            return redirect()->route('login')->with('error', 'Anda tidak memiliki akses');
+        }
+    }
+}       
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
-    <script>
-        document.querySelectorAll('.copy-button').forEach(button => {
-            button.addEventListener('click', () => {
-                const code = button.previousElementSibling.querySelector('code').textContent;
-                navigator.clipboard.writeText(code).then(() => {
-                    button.textContent = 'Copied!';
-                    button.style.background = '#2196F3';
-                    setTimeout(() => {
-                        button.textContent = 'Copy';
-                        button.style.background = '#4CAF50';
-                    }, 2000);
-                });
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
