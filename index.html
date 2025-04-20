@@ -94,7 +94,7 @@ return new class extends Migration
     </div>
 
     <div class="tutorial-step">
-        <h2><span class="step-number">3</span>Setup Database Migration untuk saldo</h2>
+        <h2><span class="step-number">3</span>Setup Database Migration untuk saldo </h2><h1>(LEBIH BAIK JANGAN)</h1>
         <p>php artisan make:migration saldo</p>
         <div class="code-container">
             <pre><code class="language-php">use Illuminate\Database\Migrations\Migration;
@@ -837,7 +837,181 @@ class CheckUserRole
         </div>
     </div>
 
+    <div class="tutorial-step">
+        <h2><span class="step-number">13</span>Setup Kernel untuk CheckUserRole</h2>
+        <p>Pergi ke kernel lalu tambahkan code berikut ini:</p>
+        <div class="code-container">
+            <pre><code class="language-php">'checkRole' => \App\Http\Middleware\CheckUserRole::class,
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">14</span>Setup Route web.php</h2>
+        <p>Membuat semua route</p>
+        <div class="code-container">
+            <pre><code class="language-php">use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BankController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MutasiController;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+Route::get('/', function () {
+    return view('auth.login');
+});
+
+Route::controller(LoginController::class)->group(function(){
+    Route::get('login','login')->name('login');
+    Route::post('login','loginAction')->name('login.action' );
+    Route::get('user',function () {
+        return view('user/index');
+    })->name('user.index');
+
+    Route::get('logout','logout')->middleware('auth')->name('logout');
+});
+
+Route::middleware(['auth'])->group(function(){
+    Route::group(['middleware' => ['checkRole:admin']],function(){
+        Route::resource('admin',controller:AdminController::class)->except('show');
+        Route::post('admin/confirmtopup/{id}',[AdminController::class, 'confirmtopup'])->name('admin.confirmtopup');
+    });
+
+    Route::group(['middleware' => ['checkRole:user']],function(){
+        Route::resource('user',controller:UserController::class)->except('show');
+        Route::post('user/topup',[UserController::class, 'topup'])->name('user.topup');
+        Route::post('user/tariktunai', [UserController::class, 'tariktunai'])->name('user.tariktunai');
+        Route::post('user/transfer', [UserController::class, 'transfer'])->name('user.transfer');
+    });
+
+    Route::group(['middleware' => ['checkRole:bank']],function(){
+        Route::resource('bank',controller:BankController::class)->except('show');
+        Route::post('bank/topup/{id}',[BankController::class,'topup'])->name('bank.topup');
+        Route::post('bank/tariktunai',[BankController::class,'tariktunai'])->name('bank.tariktunai');
+        Route::post('bank/confirmTopup/{id}',[BankController::class,'confirmTopup'])->name('bank.confirmTopup');
+    });
+
+    Route::group(['middleware' => ['auth']], function() {
+        Route::group(['middleware'=> ['checkRole:user']],function(){
+            // Mutasi untuk user: cetak semua transaksi user yang sedang login
+            Route::get('/mutasi/user', [MutasiController::class, 'userAll'])->name('mutasi.user.all');
     
+        // Mutasi untuk user: cetak detail satu transaksi
+        Route::get('/mutasi/user/{id}', [MutasiController::class, 'userSingle'])->name('mutasi.user.single');
+        });
+        // Route untuk admin dan bank: cetak semua transaksi
+        // middleware hanya untuk admin dan bank'
+        Route::get('/mutasi/all', [MutasiController::class, 'mutasiAll'])->middleware('checkRole:admin,bank')->name('mutasi.mutasi.all');
+    });
+});
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">15</span>Setup config/app.php</h2>
+        <p>definisikan Dompdf di config/app.php</p>
+        <div class="code-container">
+            <pre><code class="language-php">'aliases' => Facade::defaultAliases()->merge([
+                'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,
+            ])->toArray(), 
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    <div class="tutorial-step">
+        <h2><span class="step-number">16</span>Mendownload barryvdh/laravel-dompdf</h2>
+        <p>jalankan code ini di controller</p>
+        <div class="code-container">
+            <pre><code class="language-php">composer require barryvdh/laravel-dompdf       
+</code></pre>
+            <button class="copy-button">Copy</button>
+        </div>
+    </div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
